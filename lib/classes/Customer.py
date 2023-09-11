@@ -1,4 +1,4 @@
-from Review import Review
+from classes.Review import Review
 
 from sqlalchemy import (create_engine, desc, func,
     CheckConstraint, PrimaryKeyConstraint, UniqueConstraint,
@@ -11,28 +11,46 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 class Customer(Base):
+    instances=[]
+
     __tablename__='customers'                           #Creates a customers table
+
+    __table_args__=(
+        PrimaryKeyConstraint(
+            'id',
+            name='id_pk'
+        ),
+        UniqueConstraint(
+            'name',
+            name='unique_name'
+        )
+    )
 
     id = Column(Integer(),primary_key=True)
     name = Column(String())
-    family_name = Column(String())
+    family = Column(String())
 
 
-
-    def __init__(self,name, family_name):
+    def __init__(self,name, family):
         self.name =name
-        self.family_name = family_name
-        self.instances.append(self)
-        self.review_count=[]
+        self.family = family
+        #self.instances.append(self)
+        #self.review_count=[]
+        engine = create_engine('sqlite:///restaurants.db', echo=True)
+        Base.metadata.create_all(engine)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        session.add(self)
+        session.commit()
 
     def given_name(self):
         return self.name
 
-    def family_name(self):
-        return self.family_name
+    def familyname(self):
+        return self.family
 
     def full_name(self):
-        return self.name + " " + self.family_name
+        return self.name + " " + self.family
     
     def __str__(self) -> str:
         return f"Name: {self.name}"
@@ -51,15 +69,12 @@ class Customer(Base):
         print(len(self.review_count))
 
     def restaurants(self):
-        pass    
+        pass 
+
 
 
 #sfdsfsd
 
-if __name__=='__main__':
-        engine = create_engine('sqlite:///restaurants.db', echo=True)
-        Base.metadata.create_all(engine)
 
-Session = sessionmaker(bind=engine)
-session = Session()
+
 
