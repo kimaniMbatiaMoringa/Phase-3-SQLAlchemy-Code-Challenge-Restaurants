@@ -44,6 +44,9 @@ class Customer(Base):
         session.commit()
 
     def given_name(self):
+        engine = create_engine('sqlite:///restaurants.db', echo=True)
+        Session = sessionmaker(bind=engine)
+        session = Session()
         return self.name
 
     def familyname(self):

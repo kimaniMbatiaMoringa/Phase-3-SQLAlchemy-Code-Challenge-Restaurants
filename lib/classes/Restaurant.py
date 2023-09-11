@@ -11,18 +11,7 @@ Base = declarative_base()
 
 class Restaurant(Base):
 
-    __table_name__= 'restaurants'
-
-    __table_args__=(
-        PrimaryKeyConstraint(
-            'id',
-            name='id_pk'
-        ),
-        UniqueConstraint(
-            'name',
-            name='unique_name'
-        )
-    )
+    __tablename__='restaurants'
 
     id = Column(Integer(),primary_key=True)
     name = Column(String())
@@ -42,9 +31,6 @@ class Restaurant(Base):
         session.add(self)
         session.commit()
 
-    def name(self):
-        return self.name
-    
     def average_star_rating(self):
         pass
         self.agg =sum(self.ratings) / len(self.ratings)

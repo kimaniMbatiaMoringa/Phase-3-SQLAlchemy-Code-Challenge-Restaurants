@@ -1,0 +1,10 @@
+    __table_args__=(
+        PrimaryKeyConstraint(
+            'id',
+            name='id_pk'
+        ),
+        UniqueConstraint(
+            'name',
+            name='unique_name'
+        )
+    )
