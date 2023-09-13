@@ -1,6 +1,6 @@
 from sqlalchemy import (create_engine, desc, func,
     CheckConstraint, PrimaryKeyConstraint, UniqueConstraint,ForeignKey,
-    Index, Column, DateTime, Integer, String)
+    Index, Column, DateTime, Integer, String,delete)
 from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy.orm import declarative_base,relationship,backref
@@ -47,8 +47,13 @@ class Customer(Base):
         return self.family
 
     def full_name(self):
-        return self.name + " " + self.family
+        #return self.name + " " + self.family
+        result = session.query(Customer).where(Customer.id==self.id).first()
+        print(result.name + " " + result.family)
     
+    def favorite_restaurant(self):
+        result = session.query(Review).where(Review.customer_id==self.id)
+
     def __str__(self) -> str:
         return f"Name: {self.name}"
     
@@ -65,8 +70,12 @@ class Customer(Base):
          session.commit()
          #return review.customer()
 
-    def num_reviews(self):
-        print(len(self.review_count))
+    def delete_reviews(self):
+        reviewlist = session.query(Review).where(Review.customer_id==self.id).all()
+        print(reviewlist)
+        for i in reviewlist:
+            session.delete(i)
+        session.commit()       
 
     def restaurants(self):
         pass
@@ -93,7 +102,7 @@ class Restaurant(Base):
     id = Column(Integer(),primary_key=True)
     name = Column(String())
     price = Column(Integer())
-    
+    customers = relationship("Customer", back_populates="restaurants")
 
 
     def __init__(self,name,price):
@@ -149,7 +158,8 @@ class Review(Base):
         self.rating = rating
 
     def customer(self):
-        return self.customer_obj.name
+        result =session.query(Customer).where(Customer.id==self.customer_id).first()
+        print(result.name)
     
     def restaurant(self):
         return self.restaurant_obj
@@ -161,7 +171,7 @@ class Review(Base):
     
 
 if __name__ == '__main__':                      
-    engine = create_engine('sqlite:///restaurants.db',echo=True) #Creates a db called students.db
+    engine = create_engine('sqlite:///restaurants.db') #Creates a db called students.db
     Base.metadata.create_all(engine)                            #Uses the schema in the student class as a base for the tables created
 
 
@@ -187,7 +197,8 @@ session.add(kimani_mbatia)
 session.add(mong_kok)
 session.commit()
 
-#kimani_mbatia.add_review(mong_kok,4)
+kimani_mbatia.add_review(4)
+kimani_mbatia.add_review(3)
 
 
 ipdb.set_trace()
