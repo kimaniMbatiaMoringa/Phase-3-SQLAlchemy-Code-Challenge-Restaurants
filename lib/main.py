@@ -3,7 +3,7 @@ from sqlalchemy import (create_engine, desc, func,
     Index, Column, DateTime, Integer, String)
 from sqlalchemy.orm import sessionmaker
 
-from sqlalchemy.orm import declarative_base,relationship
+from sqlalchemy.orm import declarative_base,relationship,backref
 
 import ipdb
 
@@ -28,13 +28,14 @@ class Customer(Base):
     id = Column(Integer(),primary_key=True)
     name = Column(String())
     family = Column(String())
+    reviewsList = relationship("Review",back_populates=("customers"))    
 
 
     def __init__(self,name, family):
         self.name =name
         self.family = family
         #self.instances.append(self)
-        #self.review_count=[]
+        self.review_count=[]
 
     def given_name(self):
         engine = create_engine('sqlite:///restaurants.db', echo=True)
@@ -55,17 +56,23 @@ class Customer(Base):
         for item in self.instances:
             print(item.name)
 
-    def add_review(self,restaurant, rating):
-         review = Review(self,restaurant,rating)
-         restaurant.add_customer(self.full_name())
-         self.review_count.append(1)
-         return review.customer()
+    def add_review(self,rating):
+         review = Review(rating)
+         self.reviewsList.append(review)
+         #restaurant.add_customer(self.full_name())
+         #self.review_count.append(1)
+         session.add(review)
+         session.commit()
+         #return review.customer()
 
     def num_reviews(self):
         print(len(self.review_count))
 
     def restaurants(self):
-        pass 
+        pass
+
+    def reviews(self):
+        session.query(Review).where(Review.customer_id==self.id)
 
 class Restaurant(Base):
 
@@ -86,6 +93,7 @@ class Restaurant(Base):
     id = Column(Integer(),primary_key=True)
     name = Column(String())
     price = Column(Integer())
+    
 
 
     def __init__(self,name,price):
@@ -126,24 +134,19 @@ class Review(Base):
             'id',
             name='id_pk'
         ),
-        UniqueConstraint(
-            'name',
-            name='unique_name'
-        )
     )
 
-
     id = Column(Integer, primary_key=True)
-    rating = Column(Integer)
-    customer_id = Column(Integer, ForeignKey('customers.id'))
-    restaurant_id = Column(Integer, ForeignKey('restaurants.id'))
-    #customer = relationship('Customer', back_populates='reviews')
+    rating = Column(Integer())
+    customer_id = Column(Integer, ForeignKey('customers.id'))        #gets the Id of the customer who created the re
+    #restaurant_id = Column(Integer, ForeignKey('restaurants.id'))  
+    customers = relationship('Customer', back_populates='reviewsList')
     #restaurant = relationship('Restaurant', back_populates='reviews')
 
-    def __init__(self,customer_inp,restaurant_inp, rating):
-        self.customer_obj = customer_inp
-        self.restaurant_obj = restaurant_inp
-        self.rating = restaurant_inp.set_rating(rating)
+    def __init__(self,rating):
+        #self.customer_obj = customer_id
+        #self.restaurant_obj = restaurant_id
+        self.rating = rating
 
     def customer(self):
         return self.customer_obj.name
@@ -152,7 +155,7 @@ class Review(Base):
         return self.restaurant_obj
         
         
-    def rating(self):
+    def see_rating(self):
         return self.rating
     
     
@@ -172,18 +175,19 @@ mong_kok = Restaurant(
     price=100,
 )
 
-review1 = Review(
+""" review1 = Review(
     customer_inp=kimani_mbatia,
     restaurant_inp=mong_kok,
     rating=4 
 )
-
+ """
 Session = sessionmaker(bind=engine)
 session = Session()
 session.add(kimani_mbatia)
 session.add(mong_kok)
-session.add(review1)
 session.commit()
+
+#kimani_mbatia.add_review(mong_kok,4)
 
 
 ipdb.set_trace()
